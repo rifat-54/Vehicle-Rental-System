@@ -1,11 +1,9 @@
-import express from "express"
+import app from "./app";
+import config from "./config";
 
-const app=express();
 
-app.get("/",async()=>{
-    console.log("server is running");
-})
+const port=config.port;
 
-app.listen(5000,()=>{
-    console.log("server is running on port 5000");
+app.listen(port,()=>{
+    console.log(`server is running on port : ${port}`);
 })
