@@ -1,9 +1,16 @@
 import express, { Request, Response } from "express"
 import initDB from "./config/db";
+import { authRoutes } from "./modules/auth/auth.routes";
 
 const app=express();
 
+//parser
+app.use(express.json())
+
 initDB()
+
+//auth routes
+app.use("/api/v1/auth",authRoutes)
 
 app.get("/",async(req:Request,res:Response)=>{
     res.json({
