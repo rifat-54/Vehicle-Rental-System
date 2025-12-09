@@ -59,7 +59,7 @@ const loginUser = async (payload: Record<string, unknown>) => {
         expiresIn:"7d"
     })
 
-    console.log(token);
+    // console.log(token);
     const data={
         token:token,
         user:user
