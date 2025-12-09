@@ -8,14 +8,15 @@ const auth=(...role:string[])=>{
 
         try {
             
-            const token=req.headers.authorization;
-            // console.log(token);
+            const token=req.headers.authorization?.split(" ")[1]
+            console.log(token);
             if(!token){
                return res.status(401).json({
                     success:false,
                     message:"Unauthorized access!"
                 })
             }
+            
             const decoded=await jwt.verify(token!,config.jwt_secret as string) as JwtPayload
             console.log(decoded);
 
