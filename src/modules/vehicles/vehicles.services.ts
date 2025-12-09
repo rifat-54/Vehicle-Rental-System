@@ -52,7 +52,19 @@ const getAllVehicles=async()=>{
     }
 }
 
+const getSingleVehicles=async(id:number)=>{
+    try {
+        const result=await pool.query(`
+            SELECT * FROM vehicles WHERE id=$1
+            `,[id])
+            return result.rows[0];
+    } catch (error) {
+        throw error;
+    }
+}
+
 export const vehiclesServices = {
   createVehicle,
-  getAllVehicles
+  getAllVehicles,
+  getSingleVehicles
 };
