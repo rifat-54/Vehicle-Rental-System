@@ -1,0 +1,90 @@
+import { pool } from "../../config/db";
+
+const createBooking=async(payload:Record<string,unknown>)=>{
+    try {
+        console.log(payload);
+
+        const {customer_id,vehicle_id,rent_start_date,rent_end_date}=payload;
+
+        const start=new Date(rent_start_date as string)
+        const end=new Date(rent_end_date as string)
+
+        const diff=end.getTime()-start.getTime();
+
+        if(diff<=0){
+            throw new Error("rent_end_date will be after rent_start_date") 
+        }
+
+        const day=diff/(1000*60*60*24)
+        
+
+        //get the vehicle
+        const vehicle=await pool.query(`
+            SELECT * FROM vehicles WHERE id=$1
+            `,[vehicle_id])
+
+            console.log(vehicle.rows[0]);
+            if(vehicle.rows.length===0){
+                throw new Error("vehicle_id is not valid!") 
+            }
+
+            if(vehicle.rows[0].availability_status!=='available'){
+                throw new Error("This vehicle is already booked.Book another") 
+            }
+
+            const vehicle_rent=parseInt(vehicle.rows[0].daily_rent_price);
+            console.log(vehicle_rent);
+
+            const totalPrice=day*vehicle_rent;
+
+            // console.log(totalPrice);
+ 
+        // return null;
+
+        const result=await pool.query(`
+            INSERT INTO bookings(customer_id,vehicle_id,rent_start_date,rent_end_date,total_price,status) VALUES($1,$2,$3,$4,$5,$6) RETURNING *
+            `,[customer_id,vehicle_id,rent_start_date,rent_end_date,totalPrice,"active"])
+
+            //updat vehicle status
+
+          const vehicleUpdate=  await pool.query(`
+                UPDATE vehicles SET availability_status=$1 WHERE id=$2 RETURNING *
+                `,["booked",vehicle_id])
+
+
+                // console.log("result-> ",result.rows[0]);
+                // console.log("vehicheupdate -> ",vehicleUpdate.rows[0]);
+            const vehicleData=result.rows[0];
+            vehicleData.rent_start_date=new Date(vehicleData.rent_start_date).toLocaleDateString('en-CA');
+            vehicleData.rent_end_date=new Date(vehicleData.rent_end_date).toLocaleDateString('en-CA')
+            vehicleData.vehicle={
+               vehicle_name: vehicle.rows[0].vehicle_name,
+               daily_rent_price :vehicle.rows[0].daily_rent_price
+            }
+            console.log(vehicleData);
+                
+        return vehicleData;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+
+
+// const createBooking=async()=>{
+//     try {
+//         const result=await pool.query(`
+            
+//             `)
+
+//         return result;
+//     } catch (error) {
+//         throw error;
+//     }
+// }
+
+
+export const bookingServices={
+    createBooking
+}
