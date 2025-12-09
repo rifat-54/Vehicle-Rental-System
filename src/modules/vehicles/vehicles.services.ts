@@ -63,8 +63,50 @@ const getSingleVehicles=async(id:number)=>{
     }
 }
 
+const updateVehicles=async(id:number,payload:Record<string,unknown>)=>{
+
+  try {
+    const {
+      vehicle_name,
+      type,
+      registration_number,
+      daily_rent_price,
+      availability_status,
+    } = payload;
+
+    const vehicles_type=['car', 'bike', 'van','SUV']
+
+    if(!vehicles_type.includes(type as string)){
+      return "type is invalid!"
+    }
+
+    if(daily_rent_price as number<=0){
+        return "Price shuld be more than 0"
+    }
+
+    const status=['available','booked']
+
+    if(!status.includes(availability_status as string)){
+        return "availability_status should be 'available' or 'booked' "
+    }
+    
+
+     const result=await pool.query(`
+        UPDATE vehicles SET vehicle_name=$1,type=$2,registration_number=$3,daily_rent_price=$4,availability_status=$5 WHERE id=$6 RETURNING *
+      `,[vehicle_name,type,registration_number,daily_rent_price,availability_status,id])
+
+      return result.rows[0]
+
+  } catch (error) {
+    throw error;
+  }
+
+}
+
+
 export const vehiclesServices = {
   createVehicle,
   getAllVehicles,
-  getSingleVehicles
+  getSingleVehicles,
+  updateVehicles
 };
