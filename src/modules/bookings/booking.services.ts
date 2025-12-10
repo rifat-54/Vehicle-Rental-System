@@ -1,3 +1,4 @@
+import e from "express";
 import { pool } from "../../config/db";
 
 const createBooking=async(payload:Record<string,unknown>)=>{
@@ -15,7 +16,7 @@ const createBooking=async(payload:Record<string,unknown>)=>{
             throw new Error("rent_end_date will be after rent_start_date") 
         }
 
-        const day=diff/(1000*60*60*24)
+        const day=Math.ceil(diff/(1000*60*60*24))
         
 
         //get the vehicle
@@ -32,7 +33,7 @@ const createBooking=async(payload:Record<string,unknown>)=>{
                 throw new Error("This vehicle is already booked.Book another") 
             }
 
-            const vehicle_rent=parseInt(vehicle.rows[0].daily_rent_price);
+            const vehicle_rent=Number(vehicle.rows[0].daily_rent_price);
             console.log(vehicle_rent);
 
             const totalPrice=day*vehicle_rent;
@@ -69,8 +70,72 @@ const createBooking=async(payload:Record<string,unknown>)=>{
     }
 }
 
+const getBookingsByAdmin=async()=>{
+    try {
+        const result=await pool.query(`
+            SELECT 
+            bookings.id,
+            bookings.customer_id,
+            bookings.vehicle_id,
+            TO_CHAR(bookings.rent_start_date,'YYYY-MM-DD') AS rent_start_date,
+            TO_CHAR(bookings.rent_end_date,'YYYY-MM-DD') AS rent_end_date,
+            bookings.total_price,
+            bookings.status,
+            json_build_object(
+            'name',users.name,
+            'email',users.email
+            ) AS customer,
+             json_build_object(
+             'vehicle_name',vehicles.vehicle_name,
+             'registration_number',vehicles.registration_number
+             ) AS vehicle
+
+            FROM bookings
+            JOIN users ON bookings.customer_id=users.id
+            JOIN vehicles ON bookings.vehicle_id=vehicles.id
+
+            `)
+
+        return result.rows;
+    } catch (error) {
+        throw error;
+    }
+}
 
 
+const getBookingsByCustomer=async(email:string)=>{
+    console.log(email);
+    const user=await pool.query(`
+        SELECT id FROM users WHERE email=$1
+        `,[email])
+
+        const id=user.rows[0].id;
+        console.log(id);
+        const result=await pool.query(`
+            SELECT
+            bookings.id,
+            bookings.vehicle_id,
+            TO_CHAR(bookings.rent_start_date,'YYYY-MM-DD') AS rent_start_date,
+            TO_CHAR(bookings.rent_end_date,'YYYY-MM-DD') AS rent_end_date,
+            bookings.total_price,
+            bookings.status,
+           
+
+            json_build_object(
+            'vehicle_name',vehicles.vehicle_name,
+            'registration_number',vehicles.registration_number,
+            'type',vehicles.type
+            ) AS vehicle
+
+            FROM bookings
+            JOIN vehicles ON bookings.vehicle_id=vehicles.id
+
+            WHERE bookings.customer_id=$1
+            
+            `,[id])
+
+            return result.rows
+}
 
 // const createBooking=async()=>{
 //     try {
@@ -86,5 +151,7 @@ const createBooking=async(payload:Record<string,unknown>)=>{
 
 
 export const bookingServices={
-    createBooking
+    createBooking,
+    getBookingsByAdmin,
+    getBookingsByCustomer
 }
