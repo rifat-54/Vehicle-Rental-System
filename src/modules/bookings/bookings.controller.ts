@@ -24,16 +24,42 @@ const getBookings=async(req:Request,res:Response)=>{
 
         if(decoded!.role==='admin'){
             const result=await bookingServices.getBookingsByAdmin()
-            res.status(201).json({
+            res.status(200).json({
             success:true,
             message:"Bookings retrieved successfully",
             data:result
            })
         }else{
             const result=await bookingServices.getBookingsByCustomer(decoded.email)
-            res.status(201).json({
+            res.status(200).json({
             success:true,
             message:"Your bookings retrieved successfully",
+            data:result
+           })
+        }
+
+        
+    } catch (error:any) {
+        sendError(res,error)
+    }
+}
+
+const updateBookings=async(req:Request,res:Response)=>{
+    try {
+        const decoded=req.user as JwtPayload
+
+        if(decoded!.role==='admin'){
+            const result=await bookingServices.updateBookingsByAdmin(req)
+            res.status(200).json({
+            success:true,
+            message:"Booking marked as returned. Vehicle is now available",
+            data:result
+           })
+        }else{
+            const result=await bookingServices.updateBookingByCustomer(req)
+            res.status(200).json({
+            success:true,
+            message:"Booking cancelled successfully",
             data:result
            })
         }
@@ -61,5 +87,6 @@ const getBookings=async(req:Request,res:Response)=>{
 
 export const bookingController={
     createBooking,
-    getBookings
+    getBookings,
+    updateBookings
 }

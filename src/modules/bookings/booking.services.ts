@@ -1,5 +1,6 @@
-import e from "express";
+import e, { Request } from "express";
 import { pool } from "../../config/db";
+import { JwtPayload } from "jsonwebtoken";
 
 const createBooking=async(payload:Record<string,unknown>)=>{
     try {
@@ -104,13 +105,13 @@ const getBookingsByAdmin=async()=>{
 
 
 const getBookingsByCustomer=async(email:string)=>{
-    console.log(email);
+    // console.log(email);
     const user=await pool.query(`
         SELECT id FROM users WHERE email=$1
         `,[email])
 
         const id=user.rows[0].id;
-        console.log(id);
+        // console.log(id);
         const result=await pool.query(`
             SELECT
             bookings.id,
@@ -137,21 +138,106 @@ const getBookingsByCustomer=async(email:string)=>{
             return result.rows
 }
 
-// const createBooking=async()=>{
-//     try {
-//         const result=await pool.query(`
-            
-//             `)
+const updateBookingsByAdmin=async(req:Request)=>{
+    try {
+        
+        const id=req.params.bookingId;
+        const {status}=req.body;
 
-//         return result;
-//     } catch (error) {
-//         throw error;
-//     }
-// }
+        
+        console.log('update->',status);
+        const result=await pool.query(`
+            UPDATE bookings
+            SET status=$1 WHERE id=$2 RETURNING 
+            id,
+            customer_id,
+            vehicle_id,
+            TO_CHAR(rent_start_date,'YYYY-MM-DD') AS rent_start_date,
+            TO_CHAR(rent_end_date,'YYYY-MM-DD') AS rent_end_date,
+            total_price,
+            status
+            `,[status,id])
+
+            const v_id=result.rows[0].vehicle_id;
+
+            //update vehicle status
+
+            const vRes=await pool.query(`
+                UPDATE vehicles 
+                SET availability_status=$1 WHERE id=$2 RETURNING *
+                `,['available',v_id])
+
+            console.log(result.rows[0],vRes.rows[0]);
+        // return result;
+
+        const data={
+            ...result.rows[0],
+            vehicle:{
+                availability_status: vRes.rows[0].availability_status
+            }
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+const updateBookingByCustomer=async(req:Request)=>{
+    try {
+        const decoded=req.user as JwtPayload
+
+        const booking_id=req.params.bookingId;
+        const{status}=req.body;
+        const email=decoded.email;
+
+        // console.log('update->',id,status,email);
+
+        //get user id
+
+        const uRes=await pool.query(`
+            SELECT * FROM users WHERE email=$1
+            `,[email])
+
+          const userId= uRes.rows[0].id;
+
+        
+        const result=await pool.query(`
+            UPDATE bookings
+            SET status=$1 WHERE id=$2 AND customer_id=$3 RETURNING
+            id,
+            customer_id,
+            vehicle_id,
+            TO_CHAR(rent_start_date,'YYYY-MM-DD') AS rent_start_date,
+            TO_CHAR(rent_end_date,'YYYY-MM-DD') AS rent_end_date,
+            total_price,
+            status
+            `,[status,booking_id,userId])
+
+
+            //change the vehicle status
+
+            const v_id=result.rows[0].vehicle_id;
+
+            const vRes=await pool.query(`
+                UPDATE vehicles 
+                SET availability_status=$1 
+                WHERE id=$2
+                RETURNING *
+                `,['available',v_id])
+
+            
+        return result.rows[0];
+    } catch (error) {
+        throw error;
+    }
+}
 
 
 export const bookingServices={
     createBooking,
     getBookingsByAdmin,
-    getBookingsByCustomer
+    getBookingsByCustomer,
+    updateBookingsByAdmin,
+    updateBookingByCustomer
 }
