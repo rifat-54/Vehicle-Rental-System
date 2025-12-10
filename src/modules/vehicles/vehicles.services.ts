@@ -106,8 +106,8 @@ const updateVehicles=async(id:number,payload:Record<string,unknown>)=>{
 const deleteVehicles=async(id:number)=>{
     try {
         const result=await pool.query(`
-            DELETE FROM vehicles WHERE id=$1
-            `,[id])
+            DELETE FROM vehicles WHERE id=$1 AND availability_status=$2
+            `,[id,'available'])
 
           return  result.rowCount;
     } catch (error) {
