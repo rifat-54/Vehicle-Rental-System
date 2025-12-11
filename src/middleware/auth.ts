@@ -9,7 +9,7 @@ const auth=(...role:string[])=>{
         try {
             
             const token=req.headers.authorization?.split(" ")[1]
-            console.log(token);
+            // console.log(token);
             if(!token){
                return res.status(401).json({
                     success:false,
@@ -18,7 +18,7 @@ const auth=(...role:string[])=>{
             }
             
             const decoded=await jwt.verify(token!,config.jwt_secret as string) as JwtPayload
-            console.log(decoded);
+            // console.log(decoded);
 
             req.user=decoded;
             if(role.length!==0 && !role.includes(decoded.role)){

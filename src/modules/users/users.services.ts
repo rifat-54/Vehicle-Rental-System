@@ -15,7 +15,6 @@ const getAllUser=async()=>{
 }
 
 
-
 const updateUser=async(req:Request,id:number,payload:Record<string,unknown>)=>{
 
     // console.log(payload);
@@ -25,7 +24,7 @@ const updateUser=async(req:Request,id:number,payload:Record<string,unknown>)=>{
 
         const decoded=req.user;
 
-        console.log(decoded);
+        // console.log(decoded);
 
         if(decoded?.role==='customer'){
             const result=await pool.query(`
@@ -57,14 +56,6 @@ const updateUser=async(req:Request,id:number,payload:Record<string,unknown>)=>{
 }
 
 
-
-
-
-
-
-
-
-
 const deleteUser=async(userId:string | number)=>{
 
     // status=$2 
@@ -74,9 +65,9 @@ const deleteUser=async(userId:string | number)=>{
             SELECT * FROM bookings WHERE customer_id=$1 AND status=$2
             `,[userId,'active'])
 
-         console.log(result.rows);
+        //  console.log(result.rows);
          if(result.rows.length){
-            throw Error("User can't be delete . User has active bookins")
+            throw Error("User can't be delete . User has active bookings")
          }
 
         const dRes= await pool.query(`

@@ -20,7 +20,7 @@ const createBooking=async(req:Request,res:Response)=>{
 const getBookings=async(req:Request,res:Response)=>{
     try {
         const decoded=req.user as JwtPayload
-        console.log("from bokings-> ",decoded);
+        // console.log("from bokings-> ",decoded);
 
         if(decoded!.role==='admin'){
             const result=await bookingServices.getBookingsByAdmin()

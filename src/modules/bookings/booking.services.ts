@@ -1,10 +1,11 @@
 import e, { Request } from "express";
 import { pool } from "../../config/db";
 import { JwtPayload } from "jsonwebtoken";
+import cron from "node-cron"
 
 const createBooking=async(payload:Record<string,unknown>)=>{
     try {
-        console.log(payload);
+        // console.log(payload);
 
         const {customer_id,vehicle_id,rent_start_date,rent_end_date}=payload;
 
@@ -25,7 +26,7 @@ const createBooking=async(payload:Record<string,unknown>)=>{
             SELECT * FROM vehicles WHERE id=$1
             `,[vehicle_id])
 
-            console.log(vehicle.rows[0]);
+            // console.log(vehicle.rows[0]);
             if(vehicle.rows.length===0){
                 throw new Error("vehicle_id is not valid!") 
             }
@@ -35,7 +36,7 @@ const createBooking=async(payload:Record<string,unknown>)=>{
             }
 
             const vehicle_rent=Number(vehicle.rows[0].daily_rent_price);
-            console.log(vehicle_rent);
+            // console.log(vehicle_rent);
 
             const totalPrice=day*vehicle_rent;
 
@@ -63,7 +64,7 @@ const createBooking=async(payload:Record<string,unknown>)=>{
                vehicle_name: vehicle.rows[0].vehicle_name,
                daily_rent_price :vehicle.rows[0].daily_rent_price
             }
-            console.log(vehicleData);
+            // console.log(vehicleData);
                 
         return vehicleData;
     } catch (error) {
@@ -145,7 +146,7 @@ const updateBookingsByAdmin=async(req:Request)=>{
         const {status}=req.body;
 
         
-        console.log('update->',status);
+        // console.log('update->',status);
         const result=await pool.query(`
             UPDATE bookings
             SET status=$1 WHERE id=$2 RETURNING 
@@ -167,7 +168,7 @@ const updateBookingsByAdmin=async(req:Request)=>{
                 SET availability_status=$1 WHERE id=$2 RETURNING *
                 `,['available',v_id])
 
-            console.log(result.rows[0],vRes.rows[0]);
+            // console.log(result.rows[0],vRes.rows[0]);
         // return result;
 
         const data={
@@ -232,6 +233,35 @@ const updateBookingByCustomer=async(req:Request)=>{
         throw error;
     }
 }
+
+
+// udate bookings automatically
+
+cron.schedule("0 */1 * * *",async()=>{
+   try {
+     //update bookings status when date is over
+    await pool.query(`
+        UPDATE bookings
+        SET status='returned'
+        WHERE rent_end_date < NOW() AND status!='returned'
+        `)
+
+        // update vehicle status
+
+        await pool.query(`
+            UPDATE vehicles
+            SET status='available'
+            WHERE id IN(
+            SELECT vehicle_id
+            FROM bookings
+            WHERE status='returned'
+            )
+            `)
+            
+   } catch (error:any) {
+    throw Error(error)
+   }
+})
 
 
 export const bookingServices={

@@ -2,14 +2,14 @@ import { pool } from "../../config/db";
 
 const createVehicle = async (payload: Record<string, unknown>) => {
   try {
-    console.log(payload);
+    // console.log(payload);
     const {
       vehicle_name,
       type,
       registration_number,
       daily_rent_price,
       availability_status,
-    } = payload;
+    } = payload; 
 
     const vehicles_type=['car', 'bike', 'van','SUV']
 

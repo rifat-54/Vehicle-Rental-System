@@ -4,10 +4,10 @@ import { authServices } from "./auth.services";
 
 const createUser=async(req:Request,res:Response)=>{
     try {
-        console.log(req.body);
+        // console.log(req.body);
         const result= await authServices.createUser(req.body)
 
-        console.log(result);
+        // console.log(result);
         res.status(201).json({
             success:true,
             message:"User registered successfully",
@@ -15,7 +15,7 @@ const createUser=async(req:Request,res:Response)=>{
         })
 
     } catch (error:any) {
-        console.log(error);
+        // console.log(error);
         sendError(res,error)
     }
 }
@@ -33,7 +33,7 @@ const loginUser=async(req:Request,res:Response)=>{
         })
 
     } catch (error:any) {
-        console.error(error)
+        // console.error(error)
         sendError(res,error)
     }
 }

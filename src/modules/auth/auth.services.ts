@@ -28,7 +28,7 @@ const createUser = async (payload: Record<string, unknown>) => {
 const loginUser = async (payload: Record<string, unknown>) => {
   try {
     const { email, password } = payload;
-    console.log(email, password);
+    // console.log(email, password);
 
     const result=await pool.query(`
         SELECT * FROM users WHERE email=$1
