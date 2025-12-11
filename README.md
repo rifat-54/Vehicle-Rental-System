@@ -1,7 +1,12 @@
-setup server 
+Vehicle Rental System
 
-1.clone the repo
-2. npm i 
-3. add the .env file
-3. run server on npm run dev command
+live link: https://vehicle-rental-system-henna.vercel.app/
+
+Project Overview
+A backend API for a vehicle rental system project . it allow 
+.manage vehicle tracking
+.manage customer account
+.manage bookings 
+.handle vehicle status
+.secure role-based access control (Admin and Customer role)
 
